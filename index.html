@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central de Notícias</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        #sidebar { transition: transform 0.3s ease-in-out; }
+        #overlay { transition: opacity 0.3s ease-in-out; }
+        #back-to-top-btn { transition: opacity 0.3s, transform 0.3s; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Menu Lateral (Sidebar) -->
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden opacity-0"></div>
+    <aside id="sidebar" class="fixed top-0 left-0 w-64 h-full bg-white shadow-lg z-30 transform -translate-x-full">
+        <div class="p-4 flex justify-between items-center border-b">
+            <h2 class="font-bold text-lg text-pink-600">Categorias</h2>
+            <button id="close-sidebar-btn" class="text-gray-600 hover:text-gray-900">&times;</button>
+        </div>
+        <nav id="category-nav" class="p-4"></nav>
+    </aside>
+
+    <!-- Cabeçalho do site -->
+    <header class="bg-white shadow-md sticky top-0 z-10">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <button id="open-sidebar-btn" class="p-2 text-gray-600 hover:text-pink-600">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                </button>
+                <div class="text-center">
+                    <h1 class="text-3xl font-bold text-pink-600">Central de Notícias</h1>
+                    <p class="text-gray-500 mt-1 text-sm md:text-base">As últimas notícias do mundo das celebridades!</p>
+                </div>
+                <div class="w-8"></div> <!-- Espaço para alinhar o título ao centro -->
+            </div>
+            <!-- Barra de Pesquisa -->
+            <div class="mt-4">
+                <input type="text" id="search-input" placeholder="Pesquisar notícias..." class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-transparent">
+            </div>
+        </div>
+    </header>
+
+    <!-- Conteúdo principal -->
+    <main class="container mx-auto px-4 py-8">
+        <div id="loading" class="text-center py-10">
+            <p class="text-lg font-semibold">A organizar as fofocas mais recentes...</p>
+        </div>
+        <div id="news-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </main>
+
+    <!-- Botão Voltar ao Topo -->
+    <button id="back-to-top-btn" class="fixed bottom-5 right-5 bg-pink-600 text-white p-3 rounded-full shadow-lg opacity-0 transform translate-y-4 hover:bg-pink-700">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+    </button>
+
+    <!-- Rodapé -->
+    <footer class="text-center py-4 text-gray-500 text-sm">
+        <p>&copy; 2024 Central de Notícias. Todos os direitos reservados.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const googleSheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vShVSJjWn39t_3R1RXw-qcAldFT5bvK0GhTu53KNs-6w5oi-YAgXhq5kwoyaphXaZUzpQsnOwFw_pFb/pub?gid=1365485367&single=true&output=csv';
+
+            // Seletores de elementos
+            const newsContainer = document.getElementById('news-container');
+            const loadingIndicator = document.getElementById('loading');
+            const openSidebarBtn = document.getElementById('open-sidebar-btn');
+            const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            const categoryNav = document.getElementById('category-nav');
+            const searchInput = document.getElementById('search-input');
+            const backToTopBtn = document.getElementById('back-to-top-btn');
+
+            let allNewsItems = [];
+            let currentCategoryFilter = null;
+
+            // --- Lógica do Menu Lateral ---
+            function openSidebar() { sidebar.classList.remove('-translate-x-full'); overlay.classList.remove('hidden', 'opacity-0'); }
+            function closeSidebar() { sidebar.classList.add('-translate-x-full'); overlay.classList.add('opacity-0'); setTimeout(() => overlay.classList.add('hidden'), 300); }
+            openSidebarBtn.addEventListener('click', openSidebar);
+            closeSidebarBtn.addEventListener('click', closeSidebar);
+            overlay.addEventListener('click', closeSidebar);
+
+            // --- Lógica do Botão Voltar ao Topo ---
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 300) {
+                    backToTopBtn.classList.remove('opacity-0', 'translate-y-4');
+                } else {
+                    backToTopBtn.classList.add('opacity-0', 'translate-y-4');
+                }
+            });
+            backToTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+            // --- Funções Auxiliares ---
+            function displayError(message) { loadingIndicator.classList.add('hidden'); newsContainer.innerHTML = `<p class="text-center text-red-500 col-span-full">${message}</p>`; }
+            function parseDate(dateStr) { if (!dateStr) return null; const isoDateStr = dateStr.replace(' ', 'T'); const date = new Date(isoDateStr); return !isNaN(date.getTime()) ? date : null; }
+
+            // --- Função Principal de Renderização ---
+            function renderNews() {
+                const searchTerm = searchInput.value.toLowerCase();
+                
+                // 1. Filtra por categoria
+                let filteredNews = currentCategoryFilter ? allNewsItems.filter(item => item.categoria === currentCategoryFilter) : [...allNewsItems];
+
+                // 2. Filtra pelo termo de pesquisa
+                if (searchTerm) {
+                    filteredNews = filteredNews.filter(item => 
+                        item.titulo.toLowerCase().includes(searchTerm) || 
+                        item.resumo.toLowerCase().includes(searchTerm)
+                    );
+                }
+
+                if (filteredNews.length === 0) { displayError("Nenhuma notícia encontrada com os filtros atuais."); return; }
+
+                const groupedByDay = filteredNews.reduce((acc, item) => {
+                    const dayKey = item.date.toISOString().split('T')[0];
+                    if (!acc[dayKey]) acc[dayKey] = [];
+                    acc[dayKey].push(item);
+                    return acc;
+                }, {});
+
+                newsContainer.innerHTML = ''; 
+                const sortedDays = Object.keys(groupedByDay).sort().reverse();
+
+                sortedDays.forEach(dayKey => {
+                    const newsForDay = groupedByDay[dayKey];
+                    const dateForTitle = new Date(dayKey + 'T12:00:00');
+
+                    const dateHeader = document.createElement('h2');
+                    dateHeader.className = 'text-2xl font-bold text-gray-700 col-span-full mt-8 mb-4 border-b-2 border-pink-200 pb-2';
+                    dateHeader.textContent = dateForTitle.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                    newsContainer.appendChild(dateHeader);
+
+                    newsForDay.forEach(item => {
+                        const card = document.createElement('div');
+                        card.className = 'bg-white rounded-lg shadow-lg overflow-hidden flex flex-col transform hover:scale-105 transition-transform duration-300';
+                        card.innerHTML = `
+                            <a href="${item.link}" target="_blank" rel="noopener noreferrer" class="block h-full flex flex-col">
+                                <img src="${item.imagem}" alt="Imagem da notícia: ${item.titulo}" class="w-full h-48 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/fce7f3/c026d3?text=Imagem+Indisponível';">
+                                <div class="p-6 flex flex-col flex-grow">
+                                    <span class="inline-block bg-pink-100 text-pink-700 text-xs font-semibold px-2 py-1 rounded-full mb-2 self-start">${item.categoria || 'Geral'}</span>
+                                    <h2 class="text-xl font-bold mb-2">${item.titulo}</h2>
+                                    <p class="text-gray-600 text-sm mb-4 flex-grow">${item.resumo}</p>
+                                    <p class="text-xs text-gray-400 mt-auto">Fonte: ${item.fonte}</p>
+                                </div>
+                            </a>
+                        `;
+                        newsContainer.appendChild(card);
+                    });
+                });
+            }
+
+            // --- Lógica de Inicialização ---
+            searchInput.addEventListener('input', renderNews);
+            categoryNav.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (e.target.classList.contains('category-link')) {
+                    const category = e.target.dataset.category;
+                    currentCategoryFilter = (category === 'all' ? null : category);
+                    renderNews();
+                    closeSidebar();
+                }
+            });
+
+            Papa.parse(googleSheetURL, {
+                download: true, header: false, skipEmptyLines: true,
+                complete: (results) => {
+                    if (results.errors.length) { displayError("Ocorreu um erro ao ler o formato da planilha."); return; }
+                    const dataRows = results.data;
+                    if (!dataRows || dataRows.length < 2) { displayError("Nenhuma notícia encontrada na planilha."); return; }
+
+                    allNewsItems = dataRows.slice(1).map(row => {
+                        const dateObj = parseDate(row[0]);
+                        if (!dateObj) return null;
+                        return { date: dateObj, fonte: row[1], titulo: row[2], resumo: row[3], link: row[4], imagem: row[5], categoria: row[6] };
+                    }).filter(item => item && item.titulo).sort((a, b) => b.date - a.date);
+
+                    const categories = [...new Set(allNewsItems.map(item => item.categoria).filter(Boolean))];
+                    categoryNav.innerHTML = `<a href="#" class="block py-2 px-4 rounded hover:bg-pink-100 category-link" data-category="all">Exibir Todas</a>`;
+                    categories.sort().forEach(cat => { categoryNav.innerHTML += `<a href="#" class="block py-2 px-4 rounded hover:bg-pink-100 category-link" data-category="${cat}">${cat}</a>`; });
+
+                    loadingIndicator.classList.add('hidden');
+                    renderNews();
+                },
+                error: (err) => { displayError("Não foi possível conectar à planilha. Verifique sua conexão e o link da planilha."); }
+            });
+        });
+    </script>
+</body>
+</html>
