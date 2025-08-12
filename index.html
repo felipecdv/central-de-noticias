@@ -53,6 +53,8 @@
             <p class="text-lg font-semibold">A organizar as fofocas mais recentes...</p>
         </div>
         <div id="news-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        <!-- Container para o botão "Carregar Mais" -->
+        <div id="load-more-container" class="text-center mt-8"></div>
     </main>
 
     <!-- Página de Detalhes da Notícia (escondida por defeito) -->
@@ -84,8 +86,12 @@
             const searchInput = document.getElementById('search-input');
             const backToTopBtn = document.getElementById('back-to-top-btn');
             const searchBarContainer = document.getElementById('search-bar-container');
+            const loadMoreContainer = document.getElementById('load-more-container');
 
             let allNewsItems = [];
+            let currentFilteredNews = [];
+            let displayedNewsCount = 0;
+            const NEWS_PER_PAGE = 12;
             let currentCategoryFilter = null;
 
             function handleRouting() {
@@ -106,7 +112,7 @@
                     mainPage.classList.remove('hidden');
                     detailsPage.classList.add('hidden');
                     searchBarContainer.classList.remove('hidden');
-                    renderNewsList(); 
+                    applyFiltersAndRender();
                 }
             }
 
@@ -124,30 +130,39 @@
             });
             backToTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
-            function displayError(message) { loadingIndicator.classList.add('hidden'); newsContainer.innerHTML = `<p class="text-center text-red-500 col-span-full">${message}</p>`; }
-            
-            // --- CORREÇÃO DE FUSO HORÁRIO ---
-            function parseDate(dateStr) {
-                if (!dateStr) return null;
-                const isoDateStr = dateStr.replace(' ', 'T');
-                const date = new Date(isoDateStr);
-                return !isNaN(date.getTime()) ? date : null;
-            }
-
-            // Função para obter a data no formato AAAA-MM-DD ignorando o fuso horário
-            function getLocalDayKey(date) {
-                const year = date.getFullYear();
-                const month = (date.getMonth() + 1).toString().padStart(2, '0');
-                const day = date.getDate().toString().padStart(2, '0');
-                return `${year}-${month}-${day}`;
-            }
-
+            function displayError(message) { loadingIndicator.classList.add('hidden'); newsContainer.innerHTML = `<p class="text-center text-red-500 col-span-full">${message}</p>`; loadMoreContainer.innerHTML = ''; }
+            function parseDate(dateStr) { if (!dateStr) return null; const isoDateStr = dateStr.replace(' ', 'T'); const date = new Date(isoDateStr); return !isNaN(date.getTime()) ? date : null; }
+            function getLocalDayKey(date) { const year = date.getFullYear(); const month = (date.getMonth() + 1).toString().padStart(2, '0'); const day = date.getDate().toString().padStart(2, '0'); return `${year}-${month}-${day}`; }
             function createNewsId(title, date) { return `${date.getTime()}-${title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').slice(0, 50)}`; }
 
             function renderDetailsPage(item) {
                 const pageUrl = window.location.href.split('#')[0] + '#noticia/' + item.id;
                 const encodedUrl = encodeURIComponent(pageUrl);
                 const encodedTitle = encodeURIComponent(item.titulo);
+                
+                // Lógica para encontrar notícias relacionadas
+                const relatedNews = allNewsItems
+                    .filter(relatedItem => relatedItem.categoria === item.categoria && relatedItem.id !== item.id)
+                    .slice(0, 4); // Pega até 4 notícias relacionadas
+
+                let relatedNewsHtml = '';
+                if (relatedNews.length > 0) {
+                    relatedNewsHtml = `
+                        <div class="mt-12">
+                            <h3 class="text-2xl font-bold mb-4 border-b-2 border-pink-200 pb-2">Notícias Relacionadas</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                ${relatedNews.map(relatedItem => `
+                                    <a href="#noticia/${relatedItem.id}" class="block bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform duration-300">
+                                        <img src="${relatedItem.imagem}" alt="${relatedItem.titulo}" class="w-full h-32 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/400x300/fce7f3/c026d3?text=Imagem';">
+                                        <div class="p-4">
+                                            <h4 class="font-bold text-sm">${relatedItem.titulo}</h4>
+                                        </div>
+                                    </a>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
 
                 detailsPage.innerHTML = `
                     <div class="bg-white rounded-lg shadow-lg p-4 md:p-8">
@@ -175,19 +190,22 @@
                                 <a href="https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-black"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.617l-5.21-6.817-6.044 6.817h-3.308l7.73-8.835-7.995-10.66h6.838l4.774 6.405 5.727-6.405z"/></svg></a>
                             </div>
                         </div>
+                        ${relatedNewsHtml}
                     </div>
                 `;
             }
 
-            function renderNewsList() {
-                loadingIndicator.classList.add('hidden');
-                const searchTerm = searchInput.value.toLowerCase();
-                let filteredNews = currentCategoryFilter ? allNewsItems.filter(item => item.categoria === currentCategoryFilter) : [...allNewsItems];
-                if (searchTerm) { filteredNews = filteredNews.filter(item => item.titulo.toLowerCase().includes(searchTerm) || item.resumo.toLowerCase().includes(searchTerm)); }
-                if (filteredNews.length === 0) { displayError("Nenhuma notícia encontrada com os filtros atuais."); return; }
+            function renderNewsList(append = false) {
+                if (!append) {
+                    newsContainer.innerHTML = '';
+                    loadMoreContainer.innerHTML = '';
+                }
 
-                const groupedByDay = filteredNews.reduce((acc, item) => {
-                    const dayKey = getLocalDayKey(item.date); // Usa a nova função
+                const newsToRender = currentFilteredNews.slice(0, displayedNewsCount);
+                if (newsToRender.length === 0) { displayError("Nenhuma notícia encontrada com os filtros atuais."); return; }
+
+                const groupedByDay = newsToRender.reduce((acc, item) => {
+                    const dayKey = getLocalDayKey(item.date);
                     if (!acc[dayKey]) acc[dayKey] = [];
                     acc[dayKey].push(item);
                     return acc;
@@ -201,13 +219,18 @@
                     const dateParts = dayKey.split('-');
                     const dateForTitle = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
                     
-                    const dateHeader = document.createElement('h2');
-                    dateHeader.className = 'text-2xl font-bold text-gray-700 col-span-full mt-8 mb-4 border-b-2 border-pink-200 pb-2';
-                    dateHeader.textContent = dateForTitle.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }); // Exibe em UTC para evitar saltos
-                    newsContainer.appendChild(dateHeader);
+                    if (!document.getElementById(`header-${dayKey}`)) {
+                        const dateHeader = document.createElement('h2');
+                        dateHeader.id = `header-${dayKey}`;
+                        dateHeader.className = 'text-2xl font-bold text-gray-700 col-span-full mt-8 mb-4 border-b-2 border-pink-200 pb-2';
+                        dateHeader.textContent = dateForTitle.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+                        newsContainer.appendChild(dateHeader);
+                    }
 
                     newsForDay.forEach(item => {
+                        if (document.getElementById(`card-${item.id}`)) return; // Evita duplicar cards
                         const card = document.createElement('div');
+                        card.id = `card-${item.id}`;
                         card.className = 'bg-white rounded-lg shadow-lg overflow-hidden flex flex-col transform hover:scale-105 transition-transform duration-300';
                         card.innerHTML = `
                             <a href="#noticia/${item.id}" class="block h-full flex flex-col">
@@ -223,16 +246,47 @@
                         newsContainer.appendChild(card);
                     });
                 });
+
+                loadMoreContainer.innerHTML = '';
+                if (displayedNewsCount < currentFilteredNews.length) {
+                    const loadMoreBtn = document.createElement('button');
+                    loadMoreBtn.className = 'bg-pink-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-pink-700 transition-colors';
+                    loadMoreBtn.textContent = 'Carregar Mais Notícias';
+                    loadMoreBtn.addEventListener('click', () => {
+                        displayedNewsCount += NEWS_PER_PAGE;
+                        renderNewsList(true);
+                    });
+                    loadMoreContainer.appendChild(loadMoreBtn);
+                }
+            }
+            
+            function applyFiltersAndRender() {
+                const searchTerm = searchInput.value.toLowerCase();
+                let filteredNews = allNewsItems;
+
+                if (currentCategoryFilter) {
+                    filteredNews = filteredNews.filter(item => item.categoria === currentCategoryFilter);
+                }
+                if (searchTerm) {
+                    filteredNews = filteredNews.filter(item => 
+                        item.titulo.toLowerCase().includes(searchTerm) || 
+                        item.resumo.toLowerCase().includes(searchTerm)
+                    );
+                }
+                
+                currentFilteredNews = filteredNews;
+                displayedNewsCount = NEWS_PER_PAGE;
+                renderNewsList();
             }
 
-            searchInput.addEventListener('input', renderNewsList);
+            searchInput.addEventListener('input', applyFiltersAndRender);
             categoryNav.addEventListener('click', (e) => {
                 e.preventDefault();
                 if (e.target.classList.contains('category-link')) {
                     const category = e.target.dataset.category;
                     currentCategoryFilter = (category === 'all' ? null : category);
                     window.location.hash = '';
-                    renderNewsList();
+                    applyFiltersAndRender();
                     closeSidebar();
                 }
             });
