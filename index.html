@@ -1,9 +1,23 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Título e Descrição Padrão -->
     <title>Central de Notícias</title>
+    <meta name="description" content="As últimas notícias e fofocas do mundo das celebridades, atualizadas diariamente.">
+    
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-9609C2JKZ1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-9609C2JKZ1');
+    </script>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,50 +28,83 @@
         #sidebar { transition: transform 0.3s ease-in-out; }
         #overlay { transition: opacity 0.3s ease-in-out; }
         #back-to-top-btn { transition: opacity 0.3s, transform 0.3s; }
+        body, header, aside, main, footer, input, button, a, div {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
 
     <!-- Menu Lateral (Sidebar) -->
     <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden opacity-0"></div>
-    <aside id="sidebar" class="fixed top-0 left-0 w-64 h-full bg-white shadow-lg z-30 transform -translate-x-full">
-        <div class="p-4 flex justify-between items-center border-b">
-            <h2 class="font-bold text-lg text-pink-600">Categorias</h2>
-            <button id="close-sidebar-btn" class="text-gray-600 hover:text-gray-900">&times;</button>
+    <aside id="sidebar" class="fixed top-0 left-0 w-64 h-full bg-white dark:bg-gray-800 shadow-lg z-30 transform -translate-x-full">
+        <div class="p-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
+            <h2 class="font-bold text-lg text-pink-600 dark:text-pink-500">Categorias</h2>
+            <button id="close-sidebar-btn" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">&times;</button>
         </div>
         <nav id="category-nav" class="p-4"></nav>
     </aside>
 
     <!-- Cabeçalho do site -->
-    <header class="bg-white shadow-md sticky top-0 z-10">
+    <header class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-10">
         <div class="container mx-auto px-4 py-4">
             <div class="flex items-center justify-between">
-                <button id="open-sidebar-btn" class="p-2 text-gray-600 hover:text-pink-600">
+                <button id="open-sidebar-btn" class="p-2 text-gray-600 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-500">
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
                 </button>
                 <div class="text-center">
-                    <h1 class="text-3xl font-bold text-pink-600">Central de Notícias</h1>
-                    <p class="text-gray-500 mt-1 text-sm md:text-base">As últimas notícias do mundo das celebridades!</p>
+                    <h1 class="text-3xl font-bold text-pink-600 dark:text-pink-500">Central de Notícias</h1>
+                    <p class="text-gray-500 dark:text-gray-400 mt-1 text-sm md:text-base">As últimas notícias do mundo das celebridades!</p>
                 </div>
-                <div class="w-8"></div>
+                <!-- Botão de Tema (Sol/Lua) -->
+                <button id="theme-toggle-btn" class="p-2 text-gray-600 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-500">
+                    <svg id="theme-icon-sun" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                    <svg id="theme-icon-moon" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+                </button>
             </div>
             <div id="search-bar-container" class="mt-4">
-                <input type="text" id="search-input" placeholder="Pesquisar notícias..." class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-transparent">
+                <input type="text" id="search-input" placeholder="Pesquisar notícias..." class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-pink-400 focus:border-transparent">
             </div>
         </div>
     </header>
 
     <!-- Página Principal (Lista de Notícias) -->
     <main id="main-page" class="hidden container mx-auto px-4 py-8">
-        <div id="loading" class="text-center py-10">
-            <p class="text-lg font-semibold">A organizar as fofocas mais recentes...</p>
+        <!-- Efeito "Loading Skeleton" -->
+        <div id="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 animate-pulse">
+                <div class="bg-gray-200 dark:bg-gray-700 h-48 rounded-md"></div>
+                <div class="mt-4 space-y-2">
+                    <div class="bg-gray-200 dark:bg-gray-700 h-4 w-1/4 rounded"></div>
+                    <div class="bg-gray-200 dark:bg-gray-700 h-6 w-full rounded"></div>
+                    <div class="bg-gray-200 dark:bg-gray-700 h-4 w-full rounded"></div>
+                    <div class="bg-gray-200 dark:bg-gray-700 h-4 w-3/4 rounded"></div>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 animate-pulse hidden md:block">
+                <div class="bg-gray-200 dark:bg-gray-700 h-48 rounded-md"></div>
+                <div class="mt-4 space-y-2">
+                    <div class="bg-gray-200 dark:bg-gray-700 h-4 w-1/4 rounded"></div>
+                    <div class="bg-gray-200 dark:bg-gray-700 h-6 w-full rounded"></div>
+                    <div class="bg-gray-200 dark:bg-gray-700 h-4 w-full rounded"></div>
+                    <div class="bg-gray-200 dark:bg-gray-700 h-4 w-3/4 rounded"></div>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 animate-pulse hidden lg:block">
+                <div class="bg-gray-200 dark:bg-gray-700 h-48 rounded-md"></div>
+                <div class="mt-4 space-y-2">
+                    <div class="bg-gray-200 dark:bg-gray-700 h-4 w-1/4 rounded"></div>
+                    <div class="bg-gray-200 dark:bg-gray-700 h-6 w-full rounded"></div>
+                    <div class="bg-gray-200 dark:bg-gray-700 h-4 w-full rounded"></div>
+                    <div class="bg-gray-200 dark:bg-gray-700 h-4 w-3/4 rounded"></div>
+                </div>
+            </div>
         </div>
         <div id="news-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-        <!-- Container para o botão "Carregar Mais" -->
         <div id="load-more-container" class="text-center mt-8"></div>
     </main>
 
-    <!-- Página de Detalhes da Notícia (escondida por defeito) -->
+    <!-- Página de Detalhes da Notícia -->
     <main id="details-page" class="hidden container mx-auto px-4 py-8"></main>
 
     <!-- Botão Voltar ao Topo -->
@@ -66,7 +113,7 @@
     </button>
 
     <!-- Rodapé -->
-    <footer class="text-center py-4 text-gray-500 text-sm">
+    <footer class="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
         <p>&copy; 2024 Central de Notícias. Todos os direitos reservados.</p>
     </footer>
 
@@ -87,6 +134,13 @@
             const backToTopBtn = document.getElementById('back-to-top-btn');
             const searchBarContainer = document.getElementById('search-bar-container');
             const loadMoreContainer = document.getElementById('load-more-container');
+            const themeToggleBtn = document.getElementById('theme-toggle-btn');
+            const sunIcon = document.getElementById('theme-icon-sun');
+            const moonIcon = document.getElementById('theme-icon-moon');
+            const metaDescription = document.querySelector('meta[name="description"]');
+
+            const DEFAULT_TITLE = 'Central de Notícias';
+            const DEFAULT_DESCRIPTION = metaDescription.getAttribute('content');
 
             let allNewsItems = [];
             let currentFilteredNews = [];
@@ -94,12 +148,45 @@
             const NEWS_PER_PAGE = 12;
             let currentCategoryFilter = null;
 
+            // --- LÓGICA DE TEMA (MODO ESCURO) ---
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    sunIcon.classList.add('hidden');
+                    moonIcon.classList.remove('hidden');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    sunIcon.classList.remove('hidden');
+                    moonIcon.classList.add('hidden');
+                }
+            }
+
+            themeToggleBtn.addEventListener('click', () => {
+                const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+                localStorage.setItem('theme', newTheme);
+                applyTheme(newTheme);
+            });
+
+            function initializeTheme() {
+                const savedTheme = localStorage.getItem('theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                applyTheme(savedTheme || (prefersDark ? 'dark' : 'light'));
+            }
+            initializeTheme();
+
+            // --- Lógica de Navegação e SEO ---
+            function updateSEOTags(title, description) {
+                document.title = title;
+                metaDescription.setAttribute('content', description);
+            }
+
             function handleRouting() {
                 const hash = window.location.hash;
                 if (hash.startsWith('#noticia/')) {
                     const newsId = hash.substring(9);
                     const newsItem = allNewsItems.find(item => item.id === newsId);
                     if (newsItem) {
+                        updateSEOTags(`${newsItem.titulo} | ${DEFAULT_TITLE}`, newsItem.resumo.slice(0, 160));
                         renderDetailsPage(newsItem);
                         mainPage.classList.add('hidden');
                         detailsPage.classList.remove('hidden');
@@ -109,6 +196,7 @@
                         window.location.hash = '';
                     }
                 } else {
+                    updateSEOTags(DEFAULT_TITLE, DEFAULT_DESCRIPTION);
                     mainPage.classList.remove('hidden');
                     detailsPage.classList.add('hidden');
                     searchBarContainer.classList.remove('hidden');
@@ -136,26 +224,22 @@
             function createNewsId(title, date) { return `${date.getTime()}-${title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').slice(0, 50)}`; }
 
             function renderDetailsPage(item) {
-                const pageUrl = window.location.href.split('#')[0] + '#noticia/' + item.id;
+                const pageUrl = window.location.href;
                 const encodedUrl = encodeURIComponent(pageUrl);
                 const encodedTitle = encodeURIComponent(item.titulo);
                 
-                // Lógica para encontrar notícias relacionadas
-                const relatedNews = allNewsItems
-                    .filter(relatedItem => relatedItem.categoria === item.categoria && relatedItem.id !== item.id)
-                    .slice(0, 4); // Pega até 4 notícias relacionadas
-
+                const relatedNews = allNewsItems.filter(relatedItem => relatedItem.categoria === item.categoria && relatedItem.id !== item.id).slice(0, 4);
                 let relatedNewsHtml = '';
                 if (relatedNews.length > 0) {
                     relatedNewsHtml = `
                         <div class="mt-12">
-                            <h3 class="text-2xl font-bold mb-4 border-b-2 border-pink-200 pb-2">Notícias Relacionadas</h3>
+                            <h3 class="text-2xl font-bold mb-4 border-b-2 border-pink-200 dark:border-pink-800 pb-2">Notícias Relacionadas</h3>
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                 ${relatedNews.map(relatedItem => `
-                                    <a href="#noticia/${relatedItem.id}" class="block bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform duration-300">
+                                    <a href="#noticia/${relatedItem.id}" class="block bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform duration-300">
                                         <img src="${relatedItem.imagem}" alt="${relatedItem.titulo}" class="w-full h-32 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/400x300/fce7f3/c026d3?text=Imagem';">
                                         <div class="p-4">
-                                            <h4 class="font-bold text-sm">${relatedItem.titulo}</h4>
+                                            <h4 class="font-bold text-sm text-gray-800 dark:text-gray-200">${relatedItem.titulo}</h4>
                                         </div>
                                     </a>
                                 `).join('')}
@@ -165,29 +249,29 @@
                 }
 
                 detailsPage.innerHTML = `
-                    <div class="bg-white rounded-lg shadow-lg p-4 md:p-8">
-                        <button onclick="window.location.hash=''" class="mb-6 inline-flex items-center text-pink-600 hover:text-pink-800">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 md:p-8">
+                        <button onclick="window.location.hash=''" class="mb-6 inline-flex items-center text-pink-600 dark:text-pink-500 hover:text-pink-800 dark:hover:text-pink-400">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                             Voltar para a lista
                         </button>
                         <h1 class="text-3xl md:text-4xl font-bold mb-4">${item.titulo}</h1>
-                        <div class="flex items-center text-sm text-gray-500 mb-4">
+                        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-4">
                             <span class="mr-4">${new Date(item.date).toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/Sao_Paulo' })}</span>
                             <span>Fonte: ${item.fonte}</span>
                         </div>
                         <img src="${item.imagem}" alt="Imagem da notícia: ${item.titulo}" class="w-full h-auto max-h-96 object-cover rounded-lg mb-6" onerror="this.onerror=null;this.src='https://placehold.co/1200x600/fce7f3/c026d3?text=Imagem+Indisponível';">
-                        <div class="prose max-w-none text-gray-700 text-lg">
+                        <div class="prose max-w-none text-gray-700 dark:text-gray-300 text-lg">
                             <p>${item.resumo}</p>
                         </div>
-                        <div class="mt-8 pt-6 border-t flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
                             <a href="${item.link}" target="_blank" rel="noopener noreferrer" class="inline-block bg-pink-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-pink-700 transition-colors">
                                 Ler notícia original
                             </a>
                             <div class="flex items-center space-x-4">
-                                <span class="text-sm text-gray-600">Partilhar:</span>
-                                <a href="https://api.whatsapp.com/send?text=${encodedTitle}%20${encodedUrl}" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-green-500"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.894 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.886-.001 2.267.651 4.383 1.808 6.166l-1.225 4.462 4.574-1.194z"/></svg></a>
-                                <a href="https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-blue-600"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v2.385z"/></svg></a>
-                                <a href="https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-black"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.617l-5.21-6.817-6.044 6.817h-3.308l7.73-8.835-7.995-10.66h6.838l4.774 6.405 5.727-6.405z"/></svg></a>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">Partilhar:</span>
+                                <a href="https://api.whatsapp.com/send?text=${encodedTitle}%20${encodedUrl}" target="_blank" rel="noopener noreferrer" class="text-gray-400 dark:text-gray-500 hover:text-green-500"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.894 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.886-.001 2.267.651 4.383 1.808 6.166l-1.225 4.462 4.574-1.194z"/></svg></a>
+                                <a href="https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}" target="_blank" rel="noopener noreferrer" class="text-gray-400 dark:text-gray-500 hover:text-blue-600"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v2.385z"/></svg></a>
+                                <a href="https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}" target="_blank" rel="noopener noreferrer" class="text-gray-400 dark:text-gray-500 hover:text-gray-200"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.617l-5.21-6.817-6.044 6.817h-3.308l7.73-8.835-7.995-10.66h6.838l4.774 6.405 5.727-6.405z"/></svg></a>
                             </div>
                         </div>
                         ${relatedNewsHtml}
@@ -196,56 +280,47 @@
             }
 
             function renderNewsList(append = false) {
+                let lastDayKey = newsContainer.dataset.lastDayKey || null;
                 if (!append) {
                     newsContainer.innerHTML = '';
-                    loadMoreContainer.innerHTML = '';
+                    lastDayKey = null;
                 }
 
                 const newsToRender = currentFilteredNews.slice(0, displayedNewsCount);
                 if (newsToRender.length === 0) { displayError("Nenhuma notícia encontrada com os filtros atuais."); return; }
 
-                const groupedByDay = newsToRender.reduce((acc, item) => {
-                    const dayKey = getLocalDayKey(item.date);
-                    if (!acc[dayKey]) acc[dayKey] = [];
-                    acc[dayKey].push(item);
-                    return acc;
-                }, {});
+                const newsToAppend = append ? newsToRender.slice(displayedNewsCount - NEWS_PER_PAGE) : newsToRender;
 
-                newsContainer.innerHTML = ''; 
-                const sortedDays = Object.keys(groupedByDay).sort().reverse();
-
-                sortedDays.forEach(dayKey => {
-                    const newsForDay = groupedByDay[dayKey];
-                    const dateParts = dayKey.split('-');
-                    const dateForTitle = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-                    
-                    if (!document.getElementById(`header-${dayKey}`)) {
+                newsToAppend.forEach(item => {
+                    if (document.getElementById(`card-${item.id}`)) return;
+                    const currentDayKey = getLocalDayKey(item.date);
+                    if (currentDayKey !== lastDayKey) {
+                        const dateParts = currentDayKey.split('-');
+                        const dateForTitle = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
                         const dateHeader = document.createElement('h2');
-                        dateHeader.id = `header-${dayKey}`;
-                        dateHeader.className = 'text-2xl font-bold text-gray-700 col-span-full mt-8 mb-4 border-b-2 border-pink-200 pb-2';
+                        dateHeader.className = 'text-2xl font-bold text-gray-700 dark:text-gray-300 col-span-full mt-8 mb-4 border-b-2 border-pink-200 dark:border-pink-800 pb-2';
                         dateHeader.textContent = dateForTitle.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
                         newsContainer.appendChild(dateHeader);
+                        lastDayKey = currentDayKey;
                     }
-
-                    newsForDay.forEach(item => {
-                        if (document.getElementById(`card-${item.id}`)) return; // Evita duplicar cards
-                        const card = document.createElement('div');
-                        card.id = `card-${item.id}`;
-                        card.className = 'bg-white rounded-lg shadow-lg overflow-hidden flex flex-col transform hover:scale-105 transition-transform duration-300';
-                        card.innerHTML = `
-                            <a href="#noticia/${item.id}" class="block h-full flex flex-col">
-                                <img src="${item.imagem}" alt="Imagem da notícia: ${item.titulo}" class="w-full h-48 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/fce7f3/c026d3?text=Imagem+Indisponível';">
-                                <div class="p-6 flex flex-col flex-grow">
-                                    <span class="inline-block bg-pink-100 text-pink-700 text-xs font-semibold px-2 py-1 rounded-full mb-2 self-start">${item.categoria || 'Geral'}</span>
-                                    <h2 class="text-xl font-bold mb-2">${item.titulo}</h2>
-                                    <p class="text-gray-600 text-sm mb-4 flex-grow">${item.resumo.slice(0, 100)}...</p>
-                                    <p class="text-xs text-gray-400 mt-auto">Fonte: ${item.fonte}</p>
-                                </div>
-                            </a>
-                        `;
-                        newsContainer.appendChild(card);
-                    });
+                    
+                    const card = document.createElement('div');
+                    card.id = `card-${item.id}`;
+                    card.className = 'bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden flex flex-col transform hover:scale-105 transition-transform duration-300';
+                    card.innerHTML = `
+                        <a href="#noticia/${item.id}" class="block h-full flex flex-col">
+                            <img src="${item.imagem}" alt="Imagem da notícia: ${item.titulo}" class="w-full h-48 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/fce7f3/c026d3?text=Imagem+Indisponível';">
+                            <div class="p-6 flex flex-col flex-grow">
+                                <span class="inline-block bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300 text-xs font-semibold px-2 py-1 rounded-full mb-2 self-start">${item.categoria || 'Geral'}</span>
+                                <h2 class="text-xl font-bold mb-2 text-gray-800 dark:text-gray-200">${item.titulo}</h2>
+                                <p class="text-gray-600 dark:text-gray-400 text-sm mb-4 flex-grow">${item.resumo.slice(0, 100)}...</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-auto">Fonte: ${item.fonte}</p>
+                            </div>
+                        </a>
+                    `;
+                    newsContainer.appendChild(card);
                 });
+                newsContainer.dataset.lastDayKey = lastDayKey;
 
                 loadMoreContainer.innerHTML = '';
                 if (displayedNewsCount < currentFilteredNews.length) {
@@ -261,6 +336,7 @@
             }
             
             function applyFiltersAndRender() {
+                loadingIndicator.classList.add('hidden');
                 const searchTerm = searchInput.value.toLowerCase();
                 let filteredNews = allNewsItems;
 
@@ -309,11 +385,10 @@
                     }).filter(item => item && item.titulo).sort((a, b) => b.date - a.date);
 
                     const categories = [...new Set(allNewsItems.map(item => item.categoria).filter(Boolean))];
-                    categoryNav.innerHTML = `<a href="#" class="block py-2 px-4 rounded hover:bg-pink-100 category-link" data-category="all">Exibir Todas</a>`;
-                    categories.sort().forEach(cat => { categoryNav.innerHTML += `<a href="#" class="block py-2 px-4 rounded hover:bg-pink-100 category-link" data-category="${cat}">${cat}</a>`; });
+                    categoryNav.innerHTML = `<a href="#" class="block py-2 px-4 rounded hover:bg-pink-100 dark:hover:bg-gray-700 category-link" data-category="all">Exibir Todas</a>`;
+                    categories.sort().forEach(cat => { categoryNav.innerHTML += `<a href="#" class="block py-2 px-4 rounded hover:bg-pink-100 dark:hover:bg-gray-700 category-link" data-category="${cat}">${cat}</a>`; });
                     
                     mainPage.classList.remove('hidden');
-                    loadingIndicator.classList.add('hidden');
                     handleRouting();
                 },
                 error: (err) => { displayError("Não foi possível conectar à planilha."); }
