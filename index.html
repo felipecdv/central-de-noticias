@@ -39,21 +39,24 @@
                     <h1 class="text-3xl font-bold text-pink-600">Central de Notícias</h1>
                     <p class="text-gray-500 mt-1 text-sm md:text-base">As últimas notícias do mundo das celebridades!</p>
                 </div>
-                <div class="w-8"></div> <!-- Espaço para alinhar o título ao centro -->
+                <div class="w-8"></div>
             </div>
-            <div class="mt-4">
+            <div id="search-bar-container" class="mt-4">
                 <input type="text" id="search-input" placeholder="Pesquisar notícias..." class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-transparent">
             </div>
         </div>
     </header>
 
-    <!-- Conteúdo principal -->
-    <main class="container mx-auto px-4 py-8">
+    <!-- Página Principal (Lista de Notícias) -->
+    <main id="main-page" class="hidden container mx-auto px-4 py-8">
         <div id="loading" class="text-center py-10">
             <p class="text-lg font-semibold">A organizar as fofocas mais recentes...</p>
         </div>
         <div id="news-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </main>
+
+    <!-- Página de Detalhes da Notícia (escondida por defeito) -->
+    <main id="details-page" class="hidden container mx-auto px-4 py-8"></main>
 
     <!-- Botão Voltar ao Topo -->
     <button id="back-to-top-btn" class="fixed bottom-5 right-5 bg-pink-600 text-white p-3 rounded-full shadow-lg opacity-0 transform translate-y-4 hover:bg-pink-700">
@@ -69,6 +72,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             const googleSheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vShVSJjWn39t_3R1RXw-qcAldFT5bvK0GhTu53KNs-6w5oi-YAgXhq5kwoyaphXaZUzpQsnOwFw_pFb/pub?gid=1365485367&single=true&output=csv';
 
+            const mainPage = document.getElementById('main-page');
+            const detailsPage = document.getElementById('details-page');
             const newsContainer = document.getElementById('news-container');
             const loadingIndicator = document.getElementById('loading');
             const openSidebarBtn = document.getElementById('open-sidebar-btn');
@@ -78,9 +83,34 @@
             const categoryNav = document.getElementById('category-nav');
             const searchInput = document.getElementById('search-input');
             const backToTopBtn = document.getElementById('back-to-top-btn');
+            const searchBarContainer = document.getElementById('search-bar-container');
 
             let allNewsItems = [];
             let currentCategoryFilter = null;
+
+            function handleRouting() {
+                const hash = window.location.hash;
+                if (hash.startsWith('#noticia/')) {
+                    const newsId = hash.substring(9);
+                    const newsItem = allNewsItems.find(item => item.id === newsId);
+                    if (newsItem) {
+                        renderDetailsPage(newsItem);
+                        mainPage.classList.add('hidden');
+                        detailsPage.classList.remove('hidden');
+                        searchBarContainer.classList.add('hidden');
+                        window.scrollTo(0, 0);
+                    } else {
+                        window.location.hash = '';
+                    }
+                } else {
+                    mainPage.classList.remove('hidden');
+                    detailsPage.classList.add('hidden');
+                    searchBarContainer.classList.remove('hidden');
+                    renderNewsList(); 
+                }
+            }
+
+            window.addEventListener('hashchange', handleRouting);
 
             function openSidebar() { sidebar.classList.remove('-translate-x-full'); overlay.classList.remove('hidden', 'opacity-0'); }
             function closeSidebar() { sidebar.classList.add('-translate-x-full'); overlay.classList.add('opacity-0'); setTimeout(() => overlay.classList.add('hidden'), 300); }
@@ -89,32 +119,75 @@
             overlay.addEventListener('click', closeSidebar);
 
             window.addEventListener('scroll', () => {
-                if (window.scrollY > 300) {
-                    backToTopBtn.classList.remove('opacity-0', 'translate-y-4');
-                } else {
-                    backToTopBtn.classList.add('opacity-0', 'translate-y-4');
-                }
+                if (window.scrollY > 300) { backToTopBtn.classList.remove('opacity-0', 'translate-y-4'); } 
+                else { backToTopBtn.classList.add('opacity-0', 'translate-y-4'); }
             });
             backToTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
             function displayError(message) { loadingIndicator.classList.add('hidden'); newsContainer.innerHTML = `<p class="text-center text-red-500 col-span-full">${message}</p>`; }
-            function parseDate(dateStr) { if (!dateStr) return null; const isoDateStr = dateStr.replace(' ', 'T'); const date = new Date(isoDateStr); return !isNaN(date.getTime()) ? date : null; }
+            
+            // --- CORREÇÃO DE FUSO HORÁRIO ---
+            function parseDate(dateStr) {
+                if (!dateStr) return null;
+                const isoDateStr = dateStr.replace(' ', 'T');
+                const date = new Date(isoDateStr);
+                return !isNaN(date.getTime()) ? date : null;
+            }
 
-            function renderNews() {
+            // Função para obter a data no formato AAAA-MM-DD ignorando o fuso horário
+            function getLocalDayKey(date) {
+                const year = date.getFullYear();
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const day = date.getDate().toString().padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            function createNewsId(title, date) { return `${date.getTime()}-${title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').slice(0, 50)}`; }
+
+            function renderDetailsPage(item) {
+                const pageUrl = window.location.href.split('#')[0] + '#noticia/' + item.id;
+                const encodedUrl = encodeURIComponent(pageUrl);
+                const encodedTitle = encodeURIComponent(item.titulo);
+
+                detailsPage.innerHTML = `
+                    <div class="bg-white rounded-lg shadow-lg p-4 md:p-8">
+                        <button onclick="window.location.hash=''" class="mb-6 inline-flex items-center text-pink-600 hover:text-pink-800">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                            Voltar para a lista
+                        </button>
+                        <h1 class="text-3xl md:text-4xl font-bold mb-4">${item.titulo}</h1>
+                        <div class="flex items-center text-sm text-gray-500 mb-4">
+                            <span class="mr-4">${new Date(item.date).toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/Sao_Paulo' })}</span>
+                            <span>Fonte: ${item.fonte}</span>
+                        </div>
+                        <img src="${item.imagem}" alt="Imagem da notícia: ${item.titulo}" class="w-full h-auto max-h-96 object-cover rounded-lg mb-6" onerror="this.onerror=null;this.src='https://placehold.co/1200x600/fce7f3/c026d3?text=Imagem+Indisponível';">
+                        <div class="prose max-w-none text-gray-700 text-lg">
+                            <p>${item.resumo}</p>
+                        </div>
+                        <div class="mt-8 pt-6 border-t flex flex-col sm:flex-row justify-between items-center gap-4">
+                            <a href="${item.link}" target="_blank" rel="noopener noreferrer" class="inline-block bg-pink-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-pink-700 transition-colors">
+                                Ler notícia original
+                            </a>
+                            <div class="flex items-center space-x-4">
+                                <span class="text-sm text-gray-600">Partilhar:</span>
+                                <a href="https://api.whatsapp.com/send?text=${encodedTitle}%20${encodedUrl}" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-green-500"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.894 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.886-.001 2.267.651 4.383 1.808 6.166l-1.225 4.462 4.574-1.194z"/></svg></a>
+                                <a href="https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-blue-600"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v2.385z"/></svg></a>
+                                <a href="https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-black"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.617l-5.21-6.817-6.044 6.817h-3.308l7.73-8.835-7.995-10.66h6.838l4.774 6.405 5.727-6.405z"/></svg></a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function renderNewsList() {
+                loadingIndicator.classList.add('hidden');
                 const searchTerm = searchInput.value.toLowerCase();
                 let filteredNews = currentCategoryFilter ? allNewsItems.filter(item => item.categoria === currentCategoryFilter) : [...allNewsItems];
-
-                if (searchTerm) {
-                    filteredNews = filteredNews.filter(item => 
-                        item.titulo.toLowerCase().includes(searchTerm) || 
-                        item.resumo.toLowerCase().includes(searchTerm)
-                    );
-                }
-
+                if (searchTerm) { filteredNews = filteredNews.filter(item => item.titulo.toLowerCase().includes(searchTerm) || item.resumo.toLowerCase().includes(searchTerm)); }
                 if (filteredNews.length === 0) { displayError("Nenhuma notícia encontrada com os filtros atuais."); return; }
 
                 const groupedByDay = filteredNews.reduce((acc, item) => {
-                    const dayKey = item.date.toISOString().split('T')[0];
+                    const dayKey = getLocalDayKey(item.date); // Usa a nova função
                     if (!acc[dayKey]) acc[dayKey] = [];
                     acc[dayKey].push(item);
                     return acc;
@@ -125,61 +198,41 @@
 
                 sortedDays.forEach(dayKey => {
                     const newsForDay = groupedByDay[dayKey];
-                    const dateForTitle = new Date(dayKey + 'T12:00:00');
-
+                    const dateParts = dayKey.split('-');
+                    const dateForTitle = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                    
                     const dateHeader = document.createElement('h2');
                     dateHeader.className = 'text-2xl font-bold text-gray-700 col-span-full mt-8 mb-4 border-b-2 border-pink-200 pb-2';
-                    dateHeader.textContent = dateForTitle.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                    dateHeader.textContent = dateForTitle.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }); // Exibe em UTC para evitar saltos
                     newsContainer.appendChild(dateHeader);
 
                     newsForDay.forEach(item => {
                         const card = document.createElement('div');
                         card.className = 'bg-white rounded-lg shadow-lg overflow-hidden flex flex-col transform hover:scale-105 transition-transform duration-300';
-                        
-                        // Codifica o título e o link para serem usados em URLs
-                        const encodedTitle = encodeURIComponent(item.titulo);
-                        const encodedLink = encodeURIComponent(item.link);
-
                         card.innerHTML = `
-                            <a href="${item.link}" target="_blank" rel="noopener noreferrer" class="block">
+                            <a href="#noticia/${item.id}" class="block h-full flex flex-col">
                                 <img src="${item.imagem}" alt="Imagem da notícia: ${item.titulo}" class="w-full h-48 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/fce7f3/c026d3?text=Imagem+Indisponível';">
-                            </a>
-                            <div class="p-6 flex flex-col flex-grow">
-                                <span class="inline-block bg-pink-100 text-pink-700 text-xs font-semibold px-2 py-1 rounded-full mb-2 self-start">${item.categoria || 'Geral'}</span>
-                                <h2 class="text-xl font-bold mb-2">${item.titulo}</h2>
-                                <p class="text-gray-600 text-sm mb-4 flex-grow">${item.resumo}</p>
-                            </div>
-                            <!-- NOVA SECÇÃO: Botões de Partilha -->
-                            <div class="px-6 py-3 bg-gray-50 border-t flex justify-between items-center">
-                                <p class="text-xs text-gray-500">Fonte: ${item.fonte}</p>
-                                <div class="flex space-x-3">
-                                    <!-- WhatsApp -->
-                                    <a href="https://api.whatsapp.com/send?text=${encodedTitle}%20${encodedLink}" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-green-500">
-                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.894 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.886-.001 2.267.651 4.383 1.808 6.166l-1.225 4.462 4.574-1.194z"/></svg>
-                                    </a>
-                                    <!-- Facebook -->
-                                    <a href="https://www.facebook.com/sharer/sharer.php?u=${encodedLink}" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-blue-600">
-                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v2.385z"/></svg>
-                                    </a>
-                                    <!-- Twitter (X) -->
-                                    <a href="https://twitter.com/intent/tweet?url=${encodedLink}&text=${encodedTitle}" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-black">
-                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.617l-5.21-6.817-6.044 6.817h-3.308l7.73-8.835-7.995-10.66h6.838l4.774 6.405 5.727-6.405z"/></svg>
-                                    </a>
+                                <div class="p-6 flex flex-col flex-grow">
+                                    <span class="inline-block bg-pink-100 text-pink-700 text-xs font-semibold px-2 py-1 rounded-full mb-2 self-start">${item.categoria || 'Geral'}</span>
+                                    <h2 class="text-xl font-bold mb-2">${item.titulo}</h2>
+                                    <p class="text-gray-600 text-sm mb-4 flex-grow">${item.resumo.slice(0, 100)}...</p>
+                                    <p class="text-xs text-gray-400 mt-auto">Fonte: ${item.fonte}</p>
                                 </div>
-                            </div>
+                            </a>
                         `;
                         newsContainer.appendChild(card);
                     });
                 });
             }
 
-            searchInput.addEventListener('input', renderNews);
+            searchInput.addEventListener('input', renderNewsList);
             categoryNav.addEventListener('click', (e) => {
                 e.preventDefault();
                 if (e.target.classList.contains('category-link')) {
                     const category = e.target.dataset.category;
                     currentCategoryFilter = (category === 'all' ? null : category);
-                    renderNews();
+                    window.location.hash = '';
+                    renderNewsList();
                     closeSidebar();
                 }
             });
@@ -194,17 +247,22 @@
                     allNewsItems = dataRows.slice(1).map(row => {
                         const dateObj = parseDate(row[0]);
                         if (!dateObj) return null;
-                        return { date: dateObj, fonte: row[1], titulo: row[2], resumo: row[3], link: row[4], imagem: row[5], categoria: row[6] };
+                        const title = row[2];
+                        return { 
+                            id: createNewsId(title, dateObj), date: dateObj, fonte: row[1], titulo: title, 
+                            resumo: row[3], link: row[4], imagem: row[5], categoria: row[6] 
+                        };
                     }).filter(item => item && item.titulo).sort((a, b) => b.date - a.date);
 
                     const categories = [...new Set(allNewsItems.map(item => item.categoria).filter(Boolean))];
                     categoryNav.innerHTML = `<a href="#" class="block py-2 px-4 rounded hover:bg-pink-100 category-link" data-category="all">Exibir Todas</a>`;
                     categories.sort().forEach(cat => { categoryNav.innerHTML += `<a href="#" class="block py-2 px-4 rounded hover:bg-pink-100 category-link" data-category="${cat}">${cat}</a>`; });
-
+                    
+                    mainPage.classList.remove('hidden');
                     loadingIndicator.classList.add('hidden');
-                    renderNews();
+                    handleRouting();
                 },
-                error: (err) => { displayError("Não foi possível conectar à planilha. Verifique sua conexão e o link da planilha."); }
+                error: (err) => { displayError("Não foi possível conectar à planilha."); }
             });
         });
     </script>
