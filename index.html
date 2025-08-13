@@ -41,12 +41,18 @@
 
     <!-- Menu Lateral (Sidebar) -->
     <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden opacity-0"></div>
-    <aside id="sidebar" class="fixed top-0 left-0 w-64 h-full bg-white dark:bg-gray-800 shadow-lg z-30 transform -translate-x-full">
+    <aside id="sidebar" class="fixed top-0 left-0 w-64 h-full bg-white dark:bg-gray-800 shadow-lg z-30 transform -translate-x-full flex flex-col">
         <div class="p-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
             <h2 class="font-bold text-lg text-pink-600 dark:text-pink-500">Categorias</h2>
             <button id="close-sidebar-btn" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">&times;</button>
         </div>
-        <nav id="category-nav" class="p-4"></nav>
+        <nav id="category-nav" class="p-4 flex-grow"></nav>
+        <!-- Botão de Notificações -->
+        <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+            <button id="notifications-btn" class="w-full bg-pink-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-pink-700 transition-colors">
+                Ativar Notificações
+            </button>
+        </div>
     </aside>
 
     <!-- Cabeçalho do site -->
@@ -120,8 +126,10 @@
 
     <script>
         // Regista o Service Worker
-        if ('serviceWorker' in navigator) {
+        // CORREÇÃO: Adicionada verificação para não registar em ambientes de teste (como o Canvas)
+        if ('serviceWorker' in navigator && !window.location.protocol.startsWith('blob')) {
             window.addEventListener('load', () => {
+                // Usar '/service-worker.js' é mais robusto para o site publicado
                 navigator.serviceWorker.register('/service-worker.js').then(registration => {
                     console.log('ServiceWorker registado com sucesso: ', registration.scope);
                 }, err => {
@@ -147,6 +155,7 @@
             const searchBarContainer = document.getElementById('search-bar-container');
             const loadMoreContainer = document.getElementById('load-more-container');
             const metaDescription = document.querySelector('meta[name="description"]');
+            const notificationsBtn = document.getElementById('notifications-btn');
 
             const DEFAULT_TITLE = 'Central de Notícias';
             const DEFAULT_DESCRIPTION = metaDescription.getAttribute('content');
@@ -156,6 +165,37 @@
             let displayedNewsCount = 0;
             const NEWS_PER_PAGE = 12;
             let currentCategoryFilter = null;
+
+            // --- LÓGICA DE NOTIFICAÇÕES PUSH ---
+            function askForNotificationPermission() {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        console.log('Permissão para notificações concedida.');
+                        notificationsBtn.textContent = 'Notificações Ativas';
+                        notificationsBtn.disabled = true;
+                        // No futuro, aqui é onde enviaríamos a subscrição para o servidor.
+                    } else {
+                        console.log('Permissão para notificações negada.');
+                        notificationsBtn.textContent = 'Notificações Bloqueadas';
+                        notificationsBtn.disabled = true;
+                    }
+                });
+            }
+
+            notificationsBtn.addEventListener('click', askForNotificationPermission);
+
+            // Verifica o estado da permissão na carga da página
+            if ('Notification' in window) {
+                if (Notification.permission === 'granted') {
+                    notificationsBtn.textContent = 'Notificações Ativas';
+                    notificationsBtn.disabled = true;
+                } else if (Notification.permission === 'denied') {
+                    notificationsBtn.textContent = 'Notificações Bloqueadas';
+                    notificationsBtn.disabled = true;
+                }
+            } else {
+                notificationsBtn.style.display = 'none'; // Esconde o botão se o navegador não suportar notificações
+            }
 
             // --- Lógica de Navegação e SEO ---
             function updateSEOTags(title, description) {
