@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="">
+<html lang="pt-BR" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +7,10 @@
     <!-- Título e Descrição Padrão -->
     <title>Central de Notícias</title>
     <meta name="description" content="As últimas notícias e fofocas do mundo das celebridades, atualizadas diariamente.">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#DB2777">
     
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-9609C2JKZ1"></script>
@@ -56,11 +60,8 @@
                     <h1 class="text-3xl font-bold text-pink-600 dark:text-pink-500">Central de Notícias</h1>
                     <p class="text-gray-500 dark:text-gray-400 mt-1 text-sm md:text-base">As últimas notícias do mundo das celebridades!</p>
                 </div>
-                <!-- Botão de Tema (Sol/Lua) -->
-                <button id="theme-toggle-btn" class="p-2 text-gray-600 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-500">
-                    <svg id="theme-icon-sun" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-                    <svg id="theme-icon-moon" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
-                </button>
+                <!-- Espaço para manter o título centrado -->
+                <div class="w-10 h-10"></div>
             </div>
             <div id="search-bar-container" class="mt-4">
                 <input type="text" id="search-input" placeholder="Pesquisar notícias..." class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-pink-400 focus:border-transparent">
@@ -118,6 +119,17 @@
     </footer>
 
     <script>
+        // Regista o Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js').then(registration => {
+                    console.log('ServiceWorker registado com sucesso: ', registration.scope);
+                }, err => {
+                    console.log('Registo do ServiceWorker falhou: ', err);
+                });
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const googleSheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vShVSJjWn39t_3R1RXw-qcAldFT5bvK0GhTu53KNs-6w5oi-YAgXhq5kwoyaphXaZUzpQsnOwFw_pFb/pub?gid=1365485367&single=true&output=csv';
 
@@ -134,9 +146,6 @@
             const backToTopBtn = document.getElementById('back-to-top-btn');
             const searchBarContainer = document.getElementById('search-bar-container');
             const loadMoreContainer = document.getElementById('load-more-container');
-            const themeToggleBtn = document.getElementById('theme-toggle-btn');
-            const sunIcon = document.getElementById('theme-icon-sun');
-            const moonIcon = document.getElementById('theme-icon-moon');
             const metaDescription = document.querySelector('meta[name="description"]');
 
             const DEFAULT_TITLE = 'Central de Notícias';
@@ -147,32 +156,6 @@
             let displayedNewsCount = 0;
             const NEWS_PER_PAGE = 12;
             let currentCategoryFilter = null;
-
-            // --- LÓGICA DE TEMA (MODO ESCURO) ---
-            function applyTheme(theme) {
-                if (theme === 'dark') {
-                    document.documentElement.classList.add('dark');
-                    sunIcon.classList.add('hidden');
-                    moonIcon.classList.remove('hidden');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                    sunIcon.classList.remove('hidden');
-                    moonIcon.classList.add('hidden');
-                }
-            }
-
-            themeToggleBtn.addEventListener('click', () => {
-                const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
-                localStorage.setItem('theme', newTheme);
-                applyTheme(newTheme);
-            });
-
-            function initializeTheme() {
-                const savedTheme = localStorage.getItem('theme');
-                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                applyTheme(savedTheme || (prefersDark ? 'dark' : 'light'));
-            }
-            initializeTheme();
 
             // --- Lógica de Navegação e SEO ---
             function updateSEOTags(title, description) {
