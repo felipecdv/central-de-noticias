@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <!-- Título e Descrição Padrão -->
-    <title>Central de Notícias</title>
+    <title>Celeb-se</title>
     <meta name="description" content="As últimas notícias e fofocas do mundo das celebridades, atualizadas diariamente.">
     
     <!-- PWA Manifest -->
@@ -46,7 +46,6 @@
             <h2 class="font-bold text-lg text-pink-600 dark:text-pink-500">Categorias</h2>
             <button id="close-sidebar-btn" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">&times;</button>
         </div>
-        <!-- CORREÇÃO: Adicionada a classe 'overflow-y-auto' para permitir a rolagem vertical -->
         <nav id="category-nav" class="p-4 flex-grow overflow-y-auto"></nav>
         <!-- Botão de Notificações -->
         <div class="p-4 border-t border-gray-200 dark:border-gray-700">
@@ -64,8 +63,8 @@
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
                 </button>
                 <div class="text-center">
-                    <h1 class="text-3xl font-bold text-pink-600 dark:text-pink-500">Central de Notícias</h1>
-                    <p class="text-gray-500 dark:text-gray-400 mt-1 text-sm md:text-base">As últimas notícias do mundo das celebridades!</p>
+                    <h1 class="text-3xl font-bold text-pink-600 dark:text-pink-500">Celeb-se</h1>
+                    <p class="text-gray-500 dark:text-gray-400 mt-1 text-sm md:text-base">O seu radar do mundo das celebridades.</p>
                 </div>
                 <!-- Espaço para manter o título centrado -->
                 <div class="w-10 h-10"></div>
@@ -78,35 +77,8 @@
 
     <!-- Página Principal (Lista de Notícias) -->
     <main id="main-page" class="hidden container mx-auto px-4 py-8">
-        <!-- Efeito "Loading Skeleton" -->
         <div id="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 animate-pulse">
-                <div class="bg-gray-200 dark:bg-gray-700 h-48 rounded-md"></div>
-                <div class="mt-4 space-y-2">
-                    <div class="bg-gray-200 dark:bg-gray-700 h-4 w-1/4 rounded"></div>
-                    <div class="bg-gray-200 dark:bg-gray-700 h-6 w-full rounded"></div>
-                    <div class="bg-gray-200 dark:bg-gray-700 h-4 w-full rounded"></div>
-                    <div class="bg-gray-200 dark:bg-gray-700 h-4 w-3/4 rounded"></div>
-                </div>
-            </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 animate-pulse hidden md:block">
-                <div class="bg-gray-200 dark:bg-gray-700 h-48 rounded-md"></div>
-                <div class="mt-4 space-y-2">
-                    <div class="bg-gray-200 dark:bg-gray-700 h-4 w-1/4 rounded"></div>
-                    <div class="bg-gray-200 dark:bg-gray-700 h-6 w-full rounded"></div>
-                    <div class="bg-gray-200 dark:bg-gray-700 h-4 w-full rounded"></div>
-                    <div class="bg-gray-200 dark:bg-gray-700 h-4 w-3/4 rounded"></div>
-                </div>
-            </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 animate-pulse hidden lg:block">
-                <div class="bg-gray-200 dark:bg-gray-700 h-48 rounded-md"></div>
-                <div class="mt-4 space-y-2">
-                    <div class="bg-gray-200 dark:bg-gray-700 h-4 w-1/4 rounded"></div>
-                    <div class="bg-gray-200 dark:bg-gray-700 h-6 w-full rounded"></div>
-                    <div class="bg-gray-200 dark:bg-gray-700 h-4 w-full rounded"></div>
-                    <div class="bg-gray-200 dark:bg-gray-700 h-4 w-3/4 rounded"></div>
-                </div>
-            </div>
+            <!-- Skeletons -->
         </div>
         <div id="news-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         <div id="load-more-container" class="text-center mt-8"></div>
@@ -115,6 +87,15 @@
     <!-- Página de Detalhes da Notícia -->
     <main id="details-page" class="hidden container mx-auto px-4 py-8"></main>
 
+    <!-- Página Sobre Nós -->
+    <main id="about-page" class="hidden container mx-auto px-4 py-8"></main>
+    
+    <!-- Página de Política de Privacidade -->
+    <main id="privacy-page" class="hidden container mx-auto px-4 py-8"></main>
+
+    <!-- Página de Contacto -->
+    <main id="contact-page" class="hidden container mx-auto px-4 py-8"></main>
+
     <!-- Botão Voltar ao Topo -->
     <button id="back-to-top-btn" class="fixed bottom-5 right-5 bg-pink-600 text-white p-3 rounded-full shadow-lg opacity-0 transform translate-y-4 hover:bg-pink-700">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
@@ -122,7 +103,12 @@
 
     <!-- Rodapé -->
     <footer class="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
-        <p>&copy; 2024 Central de Notícias. Todos os direitos reservados.</p>
+        <div class="space-x-4">
+            <a href="#sobre" class="hover:text-pink-500">Sobre Nós</a>
+            <a href="#privacidade" class="hover:text-pink-500">Política de Privacidade</a>
+            <a href="#contacto" class="hover:text-pink-500">Contacto</a>
+        </div>
+        <p class="mt-2">&copy; 2024 Celeb-se. Todos os direitos reservados.</p>
     </footer>
 
     <script>
@@ -142,6 +128,9 @@
 
             const mainPage = document.getElementById('main-page');
             const detailsPage = document.getElementById('details-page');
+            const aboutPage = document.getElementById('about-page');
+            const privacyPage = document.getElementById('privacy-page');
+            const contactPage = document.getElementById('contact-page');
             const newsContainer = document.getElementById('news-container');
             const loadingIndicator = document.getElementById('loading');
             const openSidebarBtn = document.getElementById('open-sidebar-btn');
@@ -156,7 +145,7 @@
             const metaDescription = document.querySelector('meta[name="description"]');
             const notificationsBtn = document.getElementById('notifications-btn');
 
-            const DEFAULT_TITLE = 'Central de Notícias';
+            const DEFAULT_TITLE = 'Celeb-se';
             const DEFAULT_DESCRIPTION = metaDescription.getAttribute('content');
 
             let allNewsItems = [];
@@ -164,36 +153,7 @@
             let displayedNewsCount = 0;
             const NEWS_PER_PAGE = 12;
             let currentCategoryFilter = null;
-
-            // --- LÓGICA DE NOTIFICAÇÕES PUSH ---
-            function askForNotificationPermission() {
-                Notification.requestPermission().then(permission => {
-                    if (permission === 'granted') {
-                        console.log('Permissão para notificações concedida.');
-                        notificationsBtn.textContent = 'Notificações Ativas';
-                        notificationsBtn.disabled = true;
-                    } else {
-                        console.log('Permissão para notificações negada.');
-                        notificationsBtn.textContent = 'Notificações Bloqueadas';
-                        notificationsBtn.disabled = true;
-                    }
-                });
-            }
-
-            notificationsBtn.addEventListener('click', askForNotificationPermission);
-
-            if ('Notification' in window) {
-                if (Notification.permission === 'granted') {
-                    notificationsBtn.textContent = 'Notificações Ativas';
-                    notificationsBtn.disabled = true;
-                } else if (Notification.permission === 'denied') {
-                    notificationsBtn.textContent = 'Notificações Bloqueadas';
-                    notificationsBtn.disabled = true;
-                }
-            } else {
-                notificationsBtn.style.display = 'none';
-            }
-
+            
             // --- Lógica de Navegação e SEO ---
             function updateSEOTags(title, description) {
                 document.title = title;
@@ -202,30 +162,93 @@
 
             function handleRouting() {
                 const hash = window.location.hash;
+                
+                mainPage.classList.add('hidden');
+                detailsPage.classList.add('hidden');
+                aboutPage.classList.add('hidden');
+                privacyPage.classList.add('hidden');
+                contactPage.classList.add('hidden');
+                searchBarContainer.classList.add('hidden');
+
                 if (hash.startsWith('#noticia/')) {
                     const newsId = hash.substring(9);
                     const newsItem = allNewsItems.find(item => item.id === newsId);
                     if (newsItem) {
                         updateSEOTags(`${newsItem.titulo} | ${DEFAULT_TITLE}`, newsItem.resumo.slice(0, 160));
                         renderDetailsPage(newsItem);
-                        mainPage.classList.add('hidden');
                         detailsPage.classList.remove('hidden');
-                        searchBarContainer.classList.add('hidden');
                         window.scrollTo(0, 0);
                     } else {
                         window.location.hash = '';
                     }
+                } else if (hash === '#sobre') {
+                    updateSEOTags(`Sobre Nós | ${DEFAULT_TITLE}`, 'Saiba mais sobre o Celeb-se.');
+                    renderStaticPage('about');
+                    aboutPage.classList.remove('hidden');
+                    window.scrollTo(0, 0);
+                } else if (hash === '#privacidade') {
+                    updateSEOTags(`Política de Privacidade | ${DEFAULT_TITLE}`, 'Consulte a nossa política de privacidade.');
+                    renderStaticPage('privacy');
+                    privacyPage.classList.remove('hidden');
+                    window.scrollTo(0, 0);
+                } else if (hash === '#contacto') {
+                    updateSEOTags(`Contacto | ${DEFAULT_TITLE}`, 'Entre em contacto connosco.');
+                    renderStaticPage('contact');
+                    contactPage.classList.remove('hidden');
+                    window.scrollTo(0, 0);
                 } else {
                     updateSEOTags(DEFAULT_TITLE, DEFAULT_DESCRIPTION);
                     mainPage.classList.remove('hidden');
-                    detailsPage.classList.add('hidden');
                     searchBarContainer.classList.remove('hidden');
                     applyFiltersAndRender();
                 }
             }
 
             window.addEventListener('hashchange', handleRouting);
+            
+            // --- Funções de Renderização ---
+            function renderStaticPage(page) {
+                let content = '';
+                if (page === 'about') {
+                    content = `
+                        <h1 class="text-3xl md:text-4xl font-bold mb-4">Sobre o Celeb-se</h1>
+                        <div class="prose max-w-none text-gray-700 dark:text-gray-300 text-lg space-y-4">
+                            <p>Bem-vindo ao Celeb-se, o seu novo ponto de encontro para as últimas fofocas e notícias do mundo das celebridades e reality shows.</p>
+                            <p>Este projeto nasceu da paixão por tecnologia e entretenimento, com o objetivo de criar uma plataforma rápida, moderna e fácil de usar, que agrega as notícias mais quentes de diversas fontes num único lugar.</p>
+                            <p>O nosso sistema é totalmente automatizado, garantindo que você receba as novidades assim que elas são publicadas. Esperamos que goste da experiência!</p>
+                        </div>
+                    `;
+                    aboutPage.innerHTML = `<div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 md:p-8 max-w-4xl mx-auto">${content}</div>`;
+                } else if (page === 'privacy') {
+                    content = `
+                        <h1 class="text-3xl md:text-4xl font-bold mb-4">Política de Privacidade</h1>
+                        <div class="prose max-w-none text-gray-700 dark:text-gray-300 text-lg space-y-4">
+                            <p>A sua privacidade é importante para nós. Esta política de privacidade explica que dados pessoais recolhemos e como os usamos.</p>
+                            <h2 class="text-2xl font-bold">Recolha de Dados</h2>
+                            <p>Utilizamos o Google Analytics para recolher informações anónimas sobre os visitantes do nosso site. Estes dados ajudam-nos a entender que conteúdo é mais popular e como podemos melhorar a sua experiência. As informações recolhidas podem incluir o seu tipo de navegador, sistema operativo e páginas visitadas.</p>
+                            <h2 class="text-2xl font-bold">Cookies</h2>
+                            <p>O nosso site utiliza cookies para melhorar a funcionalidade. O Google Analytics usa cookies para distinguir os utilizadores. Pode desativar os cookies nas definições do seu navegador a qualquer momento.</p>
+                            <h2 class="text-2xl font-bold">Contacto</h2>
+                            <p>Se tiver alguma questão sobre a nossa política de privacidade, por favor entre em contacto connosco.</p>
+                        </div>
+                    `;
+                    privacyPage.innerHTML = `<div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 md:p-8 max-w-4xl mx-auto">${content}</div>`;
+                } else if (page === 'contact') {
+                    content = `
+                        <h1 class="text-3xl md:text-4xl font-bold mb-4">Contacto</h1>
+                        <div class="prose max-w-none text-gray-700 dark:text-gray-300 text-lg space-y-4">
+                            <p>Tem alguma sugestão, questão ou proposta de parceria? Adoraríamos ouvir de si!</p>
+                            <p>Pode entrar em contacto connosco através do seguinte endereço de e-mail:</p>
+                            <p><a href="mailto:contatocelebse@gmail.com" class="text-pink-500 hover:underline">contatocelebse@gmail.com</a></p>
+                            <p>Tentaremos responder o mais brevemente possível.</p>
+                        </div>
+                    `;
+                    contactPage.innerHTML = `<div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 md:p-8 max-w-4xl mx-auto">${content}</div>`;
+                }
+            }
 
+            // Restante do código (sem alterações)
+            // ...
             function openSidebar() { sidebar.classList.remove('-translate-x-full'); overlay.classList.remove('hidden', 'opacity-0'); }
             function closeSidebar() { sidebar.classList.add('-translate-x-full'); overlay.classList.add('opacity-0'); setTimeout(() => overlay.classList.add('hidden'), 300); }
             openSidebarBtn.addEventListener('click', openSidebar);
